@@ -13,31 +13,35 @@ with open(FLUTTER_BUILD, "r") as f:
 if 'CUSTOM_SUFFIX: "${{ secrets.CUSTOM_SUFFIX }}"' in content:
     print("✅ flutter-build.yml 已包含自定义配置，跳过")
 else:
-    # 1. 在 default: "nightly" 后面添加 secrets
-    search_text = 'default: "nightly"'
-    if search_text in content:
-        indent = '    '
-        secrets_block = f'''{indent}secrets:
-{indent}  # ===== 新增的自定义 secrets =====
-{indent}  RENDEZVOUS_SERVER:
-{indent}    required: false
-{indent}  RS_PUB_KEY:
-{indent}    required: false
-{indent}  API_SERVER:
-{indent}    required: false
-{indent}  DEFAULT_PASSWORD:
-{indent}    required: false
-{indent}  RELAY_SERVER:
-{indent}    required: false
-{indent}  CUSTOM_SUFFIX:
-{indent}    required: false
-{indent}  SOS_MODE:
-{indent}    required: false
+    # 1. 在 workflow_call 的 secrets 块中添加自定义 secrets
+    # 找到 "secrets:" 行，在它下面插入自定义 secrets
+    if '# ===== 新增的自定义 secrets =====' not in content:
+        # 匹配 secrets: 行及其缩进
+        pattern = r'(    secrets:\n)'
+        match = re.search(pattern, content)
+        if match:
+            secrets_block = '''      # ===== 新增的自定义 secrets =====
+      RENDEZVOUS_SERVER:
+        required: false
+      RS_PUB_KEY:
+        required: false
+      API_SERVER:
+        required: false
+      DEFAULT_PASSWORD:
+        required: false
+      RELAY_SERVER:
+        required: false
+      CUSTOM_SUFFIX:
+        required: false
+      SOS_MODE:
+        required: false
 '''
-        content = content.replace(search_text, search_text + '\n' + secrets_block)
-        print("✅ 自定义 secrets 已添加")
+            content = re.sub(pattern, r'\1' + secrets_block, content)
+            print("✅ 自定义 secrets 已添加")
+        else:
+            print("⚠️ 未找到 'secrets:' 行")
     else:
-        print("⚠️ 未找到 'default: \"nightly\"'")
+        print("ℹ️ 自定义 secrets 已存在，跳过")
 
     # 2. 在顶层 env 块末尾追加自定义变量
     if '# ===== 新增的自定义环境变量 =====' not in content:
