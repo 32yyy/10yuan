@@ -9,6 +9,10 @@ on:
       upload-tag:
         type: string
         default: "nightly"
+      publish-update-metadata:
+        type: boolean
+        default: false
+
     secrets:
       # ===== 新增的自定义 secrets =====
       RENDEZVOUS_SERVER:
@@ -26,9 +30,7 @@ on:
       SOS_MODE:
         required: false
 
-      publish-update-metadata:
-        type: boolean
-        default: false
+
 
 # NOTE: F-Droid builder script 'flutter/build_fdroid.sh' reads environment
 # variables from this workflow!
